@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#07080c">
+<meta name="description" content="KinoHub — sevimli kinolaringiz bir joyda.">
+<link rel="manifest" href="./manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="192x192" href="./icons/icon-192.png">
+<link rel="apple-touch-icon" href="./icons/icon-192.png">
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<title>KinoHub 🎬</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:Arial,sans-serif}
+html{scroll-behavior:smooth}
+body{background:#07080c;color:#fff}
+header{position:sticky;top:0;z-index:100;background:rgba(7,8,12,.94);border-bottom:1px solid #252731;padding:13px 15px;backdrop-filter:blur(18px)}
+.nav{max-width:1200px;margin:auto;display:flex;align-items:center;justify-content:space-between;gap:20px}
+.logo{display:flex;align-items:center;gap:9px;font-size:24px;font-weight:900;letter-spacing:-1px;white-space:nowrap}
+.logo-icon{width:38px;height:38px;border-radius:11px;background:linear-gradient(135deg,#ffdf38,#ff9d00);display:grid;place-items:center;color:#111;font-size:21px;box-shadow:0 5px 20px #ffbe003f}
+.logo-text span{color:#ffcc00}
+.search{width:100%;max-width:430px}
+.search input{width:100%;padding:13px 18px;border-radius:30px;border:1px solid #333640;background:#14161d;color:#fff;outline:none;font-size:15px;transition:.25s}
+.search input:focus{border-color:#ffcc00;box-shadow:0 0 0 3px #ffcc0014}
+.hero{max-width:1200px;min-height:360px;margin:25px auto;padding:45px;border-radius:25px;display:flex;align-items:center;background:linear-gradient(90deg,#07080c 4%,rgba(7,8,12,.82),rgba(7,8,12,.18)),url("https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=1400&q=80") center/cover}
+.hero-content{max-width:580px}
+.hero small{color:#ffcc00;font-weight:bold;letter-spacing:3px}
+.hero h1{font-size:45px;margin:12px 0;line-height:1.08}
+.hero p{color:#ccc;line-height:1.6;margin-bottom:22px}
+.hero-btn{display:inline-block;background:#ffcc00;color:#111;padding:13px 22px;border-radius:10px;text-decoration:none;font-weight:bold;transition:.25s}
+.hero-btn:hover{transform:translateY(-2px);box-shadow:0 8px 25px #ffcc0033}
+.container{max-width:1200px;margin:auto;padding:10px 20px 50px}
+.title{margin:25px 0 18px}.title h2{font-size:26px}
+.categories{display:flex;gap:10px;overflow-x:auto;padding-bottom:15px}
+.categories button{white-space:nowrap;padding:10px 17px;border-radius:25px;border:1px solid #333640;background:#15171e;color:#ddd;cursor:pointer;transition:.25s}
+.categories button.active,.categories button:hover{background:#ffcc00;color:#111;border-color:#ffcc00}
+.movies{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:18px}
+.movie{background:#12141a;border:1px solid #252731;border-radius:15px;overflow:hidden;transition:.3s;cursor:pointer;min-width:0}
+.movie:hover{transform:translateY(-5px);border-color:#ffcc00;box-shadow:0 12px 35px #ffcc001f}
+.poster{height:270px;position:relative;overflow:hidden;background:#191b22}
+.poster img{width:100%;height:100%;object-fit:cover;display:block;transition:.35s}
+.movie:hover .poster img{transform:scale(1.05)}
+.poster-fallback{display:none;position:absolute;inset:0;place-items:center;text-align:center;padding:12px;color:#ffdc75;background:#191b22;font-weight:bold}
+.rating{position:absolute;top:8px;right:8px;background:#000e;color:#ffcc00;padding:5px 7px;border-radius:7px;font-weight:bold;font-size:12px}
+.info{padding:12px}.info h3{margin-bottom:7px;font-size:16px;line-height:1.25}
+.meta{color:#888;font-size:12px;margin-bottom:10px}
+.watch{display:block;text-align:center;padding:9px 5px;border-radius:8px;background:#229ed9;color:#fff;text-decoration:none;font-weight:bold;font-size:12px;transition:.2s}
+.watch:hover{background:#168bc0}.watch.soon{background:#333640;color:#bbb;cursor:default}
+.empty{display:none;text-align:center;color:#888;padding:50px 15px}
+footer{border-top:1px solid #252731;text-align:center;padding:30px;color:#777}
+.modal{display:none;position:fixed;inset:0;z-index:500;background:#000d;backdrop-filter:blur(8px);padding:20px;overflow-y:auto}
+.modal-box{max-width:800px;margin:40px auto;background:#12141a;border:1px solid #333640;border-radius:20px;overflow:hidden;box-shadow:0 20px 60px #000b;position:relative}
+.modal-top{display:grid;grid-template-columns:240px 1fr}
+.modal-poster{width:100%;height:360px;object-fit:cover;background:#191b22}
+.modal-info{padding:25px}.modal-info h2{font-size:28px;margin-bottom:15px;color:#ffcc00}
+.modal-meta{color:#aaa;line-height:1.8;margin-bottom:15px;font-size:13px}
+.modal-summary{color:#ddd;line-height:1.6;margin-bottom:20px;font-size:14px}
+.close{position:fixed;right:20px;top:15px;z-index:600;width:42px;height:42px;border:0;border-radius:50%;background:#ffcc00;color:#111;font-size:25px;cursor:pointer}
+.modal-watch{display:inline-block;padding:12px 20px;background:#229ed9;color:#fff;text-decoration:none;border-radius:9px;font-weight:bold}
+.modal-watch[hidden]{display:none}
+@media(max-width:900px){.hero{margin:18px 12px}.movies{gap:12px}.poster{height:220px}}
+@media(max-width:600px){
+ header{padding:10px}.nav{flex-direction:column;gap:10px}.logo{font-size:21px}.logo-icon{width:34px;height:34px;font-size:18px}
+ .search{max-width:none}.search input{padding:11px 15px}
+ .hero{margin:15px 10px;min-height:280px;padding:25px 20px}.hero h1{font-size:30px}.hero p{font-size:13px}
+ .container{padding:10px 8px 40px}.movies{grid-template-columns:repeat(4,minmax(0,1fr));gap:7px}
+ .poster{height:145px}.info{padding:6px}.info h3{font-size:11px;margin-bottom:5px}
+ .meta{font-size:9px;margin-bottom:6px}.rating{top:4px;right:4px;padding:3px 4px;font-size:8px}
+ .watch{font-size:8px;padding:7px 2px}.modal{padding:10px}.modal-box{margin:25px auto}
+ .modal-top{grid-template-columns:110px 1fr}.modal-poster{height:170px}.modal-info{padding:12px}
+ .modal-info h2{font-size:18px}.modal-meta{font-size:11px;line-height:1.5}.modal-summary{font-size:12px}
+ .modal-watch{padding:9px 12px;font-size:11px}.close{width:36px;height:36px;font-size:22px;right:10px;top:10px}
+}
+</style>
+</head>
+<body>
+<header><div class="nav">
+  <div class="logo"><div class="logo-icon">▶</div><div class="logo-text">KINO<span>HUB</span></div></div>
+  <div class="search"><input id="search" type="search" placeholder="🔎 Kino qidirish..." aria-label="Kino qidirish"></div>
+</div></header>
+
+<div id="installArea" style="max-width:1200px;margin:12px auto 0;padding:0 15px;display:none">
+  <button id="installAppBtn" type="button" style="width:100%;padding:12px 16px;border:1px solid #ffcc00;border-radius:12px;background:#17191f;color:#ffcc00;font-weight:700;font-size:14px;cursor:pointer">
+    📲 Bosh ekranga qo‘shish
+  </button>
+  <p id="installHint" style="color:#aaa;font-size:12px;text-align:center;margin-top:7px"></p>
+</div>
+
+
+<section class="hero">
+  <div class="hero-content">
+    <small>🎬 KINOHUB</small>
+    <h1>Sevimli kinolaringiz bir joyda</h1>
+    <p>Yangi filmlar va mashhur kinolarni qulay tarzda toping.</p>
+    <a href="#content" class="hero-btn">Tomosha qilish</a>
+  </div>
+</section>
+
+<main class="container" id="content">
+  <div class="title"><h2>🎞 Kinolar</h2></div>
+  <div class="categories" id="categories">
+    <button class="active" data-genre="all">Barchasi</button>
+    <button data-genre="Jangari">Jangari</button>
+    <button data-genre="Fantastika">Fantastika</button>
+    <button data-genre="Komediya">Komediya</button>
+  </div>
+  <div class="movies" id="movieGrid"></div>
+  <div class="empty" id="empty">😔 Kino topilmadi. Boshqa nom bilan qidirib ko‘ring.</div>
+</main>
+
+<footer>© 2026 KinoHub 🎬</footer>
+
+<div class="modal" id="movieModal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+  <button class="close" id="closeModal" aria-label="Yopish">×</button>
+  <div class="modal-box">
+    <div class="modal-top">
+      <img id="modalPoster" class="modal-poster" src="" alt="">
+      <div class="modal-info">
+        <h2 id="modalTitle"></h2>
+        <div class="modal-meta" id="modalMeta"></div>
+        <p id="modalSummary" class="modal-summary"></p>
+        <a id="modalWatch" class="modal-watch" target="_blank" rel="noopener noreferrer">▶ Telegramda ochish</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const posterBase = "https://image.tmdb.org/t/p/w500/";
+const movies = [
+ {title:"Thor: Love and Thunder",year:2022,genre:"Fantastika",rating:"6.2",duration:"1 soat 58 daqiqa",poster:"pIkRyD18kl4FhoCNQuWxWu5cBLM.jpg",summary:"Thor yangi xavfga duch keladi va galaktikani himoya qilish uchun yana jangga qaytadi.",url:"https://t.me/Kino_hubUz/11"},
+ {title:"Deadpool & Wolverine",year:2024,genre:"Jangari",rating:"8.0",duration:"2 soat 8 daqiqa",poster:"8cdWjvZQUExUUTzyp4t6EDMubfO.jpg",summary:"Deadpool va Wolverine kutilmagan vaziyatda birlashib, katta xavfga qarshi kurashishga majbur bo‘ladilar.",url:"https://t.me/Kino_hubUz/10"},
+ {title:"Qasoskorlar 1",year:2012,genre:"Jangari",rating:"8.0",duration:"2 soat 23 daqiqa",poster:"RyMX2wcKCBAr24UyPD7xwmjaTn.jpg",summary:"Yerga katta xavf kelganda, mashhur qahramonlar bir jamoaga birlashadilar.",url:"https://t.me/Kino_hubUz/12"},
+ {title:"Qasoskorlar 2",year:2015,genre:"Jangari",rating:"7.3",duration:"2 soat 21 daqiqa",poster:"4ssDuvEDkSArWEdyBl2X5EHvYKU.jpg",summary:"Qasoskorlar sun’iy intellektdan yaratilgan Ultron xavfiga qarshi kurashadilar.",url:"https://t.me/Kino_hubUz/13"},
+ {title:"Qasoskorlar 3",year:2018,genre:"Jangari",rating:"8.4",duration:"2 soat 29 daqiqa",poster:"7WsyChQLEftFiDOVTGkv3hFpyyt.jpg",summary:"Thanos cheksizlik toshlarini yig‘ib, butun koinot taqdirini o‘zgartirishni rejalashtiradi.",url:"https://t.me/Kino_hubUz/14"},
+ {title:"Qasoskorlar 4",year:2019,genre:"Jangari",rating:"8.4",duration:"3 soat 1 daqiqa",poster:"or06FN3Dka5tukK1e9sl16pB3iy.jpg",summary:"Qasoskorlar koinot taqdirini o‘zgartirish uchun so‘nggi imkoniyatlarini ishga soladilar.",url:"https://t.me/Kino_hubUz/15"},
+ {title:"O‘rgimchak odam",year:2026,genre:"Fantastika",rating:"—",duration:"Noma’lum",poster:"9JCQtDCSpPR2ld55yNlEg1VwcQo.jpg",summary:"O‘rgimchak odam haqidagi yangi film. Tafsilotlar va namoyish sanasini rasmiy manbalardan tekshiring.",url:"https://t.me/Kino_hubUz/16"},
+ {title:"Fantastic Four",year:2025,genre:"Fantastika",rating:"7.5",duration:"1 soat 55 daqiqa",poster:"nf5qaSEvyYSNeFH0YhSs5EsBLX9.jpg",summary:"To‘rt qahramon Yer yuzini katta xavfdan himoya qilish uchun birlashadilar.",url:"https://t.me/Kino_hubUz/17"},
+ {title:"Doctor Strange 2",year:2022,genre:"Fantastika",rating:"8.7",duration:"2 soat 6 daqiqa",poster:"9Gtg2DzBhmYamXBS1hKAhiwbBKS.jpg",summary:"Doctor Strange ko‘p olamlar orasidagi xavfli sarguzashtga kirib, katta tahdidni to‘xtatishga harakat qiladi.",url:"https://t.me/Kino_hubUz/2"},
+ {title:"Abadiylar",year:2021,genre:"Fantastika",rating:"6.3",duration:"2 soat 36 daqiqa",poster:"lFByFSLV5WDJEv3KabbdAF959F2.jpg",summary:"Yerda minglab yillar yashirinib kelgan Abadiylar qadimgi dushmanlari qaytganidan so‘ng yana birlashadilar.",url:""},
+ {title:"Galaktika qo‘riqchilari",year:2014,genre:"Fantastika",rating:"8.0",duration:"2 soat 1 daqiqa",poster:"r7vmZjiyZw9rpJMQJdXpjgiCOk9.jpg",summary:"Piter Kvill va uning noodatiy jamoasi galaktikani xavfli dushmandan himoya qilish uchun birlashadi.",url:""},
+ {title:"Temir odam 1",year:2008,genre:"Jangari",rating:"7.9",duration:"2 soat 6 daqiqa",poster:"78lPtwv72eTNqFW9COBYI0dWDJa.jpg",summary:"Tony Stark kuchli zirh yaratadi va Temir odamga aylanib, odamlarni himoya qilishga qaror qiladi.",url:"https://t.me/Kino_hubUz/20"},
+ {title:"Temir odam 2",year:2010,genre:"Jangari",rating:"6.8",duration:"2 soat 4 daqiqa",poster:"6WBeq4fCfn7AN0o21W9qNcRF2l9.jpg",summary:"Tony Stark yangi dushmanlar bilan yuzlashadi va o‘z texnologiyasining oqibatlarini yengishga urinadi.",url:"https://t.me/Kino_hubUz/21"},
+ {title:"Temir odam 3",year:2013,genre:"Jangari",rating:"7.1",duration:"2 soat 10 daqiqa",poster:"qhPtAc1TKbMPqNvcdXSOn9Bn7hZ.jpg",summary:"Tony Stark aqli va jasorati bilan og‘ir sinovlardan o‘tib, yaqinlarini himoya qilishga urinadi.",url:"https://t.me/Kino_hubUz/22"},
+ {title:"Captain America: Civil War",year:2016,genre:"Jangari",rating:"7.8",duration:"2 soat 27 daqiqa",poster:"rAGiXaUfPzY7CDEyNKUofk3Kw2e.jpg",summary:"Qasoskorlar orasida kelishmovchilik paydo bo‘lib, jamoa ikki tomonga bo‘linadi.",url:"https://t.me/Kino_hubUz/23"},
+ {title:"Doctor Strange 1",year:2016,genre:"Fantastika",rating:"7.5",duration:"1 soat 55 daqiqa",poster:"uGBVj3bEbCoZbDjjl9wTxcygko1.jpg",summary:"Jarroh Stiven Strange sehr-jodu olamini o‘rganib, kuchli sehrgar sifatida shakllanadi.",url:"https://t.me/Kino_hubUz/28"},
+ {title:"Shang-Chi",year:2021,genre:"Jangari",rating:"7.3",duration:"2 soat 12 daqiqa",poster:"1BIoJGKbXjdFDAqUEiA2VHqkK1Z.jpg",summary:"Shang-Chi o‘tmishi va oilasining sirlari bilan yuzlashadi.",url:"https://t.me/Kino_hubUz/30"},
+ {title:"Momaqaldiroq",year:2025,genre:"Jangari",rating:"7.2",duration:"2 soat 7 daqiqa",poster:"hqcexYHbiTBfDIdDWxrxPtVndBX.jpg",summary:"Turli murakkab vazifalardan o‘tgan qahramonlar katta xavfga qarshi jamoa bo‘lib kurashadilar.",url:"https://t.me/Kino_hubUz/29"}
+];
+
+let activeGenre = "all";
+let searchText = "";
+const grid = document.getElementById("movieGrid");
+const empty = document.getElementById("empty");
+
+function escapeHtml(value){
+ return String(value ?? "").replace(/[&<>"']/g, ch => ({
+  "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+ }[ch]));
+}
+
+function renderMovies(){
+ const filtered = movies.filter(movie =>
+  (activeGenre === "all" || movie.genre === activeGenre) &&
+  (movie.title.toLocaleLowerCase("uz").includes(searchText))
+ );
+
+ grid.innerHTML = filtered.map((movie,index) => {
+  const poster = posterBase + movie.poster;
+  const watch = movie.url
+   ? `<a class="watch" href="${escapeHtml(movie.url)}" target="_blank" rel="noopener noreferrer">▶ Ko‘rish</a>`
+   : `<span class="watch soon">⏳ Tez orada</span>`;
+  return `<article class="movie" tabindex="0" role="button" data-index="${movies.indexOf(movie)}" aria-label="${escapeHtml(movie.title)} haqida ma’lumot">
+   <div class="poster">
+    <img src="${escapeHtml(poster)}" alt="${escapeHtml(movie.title)}" loading="lazy">
+    <div class="poster-fallback">${escapeHtml(movie.title)}</div>
+    <div class="rating">⭐ ${escapeHtml(movie.rating)}</div>
+   </div>
+   <div class="info">
+    <h3>${escapeHtml(movie.title)}</h3>
+    <div class="meta">${movie.year} • ${escapeHtml(movie.genre)}</div>
+    ${watch}
+   </div>
+  </article>`;
+ }).join("");
+
+ empty.style.display = filtered.length ? "none" : "block";
+
+ grid.querySelectorAll(".movie").forEach(card => {
+  const open = () => openModal(movies[Number(card.dataset.index)]);
+  card.addEventListener("click", event => {
+   if(event.target.closest("a")) return;
+   open();
+  });
+  card.addEventListener("keydown", event => {
+   if(event.key === "Enter" || event.key === " "){
+    event.preventDefault();
+    open();
+   }
+  });
+  const img = card.querySelector("img");
+  img.addEventListener("error", () => {
+   img.style.display = "none";
+   card.querySelector(".poster-fallback").style.display = "grid";
+  });
+ });
+}
+
+function openModal(movie){
+ document.getElementById("modalTitle").textContent = movie.title;
+ document.getElementById("modalMeta").innerHTML =
+  `📅 ${movie.year}<br>🌐 O‘zbekcha<br>⏱️ ${escapeHtml(movie.duration)}<br>⭐ ${escapeHtml(movie.rating)}<br>🎭 ${escapeHtml(movie.genre)}`;
+ document.getElementById("modalSummary").textContent = movie.summary;
+ const poster = document.getElementById("modalPoster");
+ poster.src = posterBase + movie.poster;
+ poster.alt = movie.title;
+ const link = document.getElementById("modalWatch");
+ link.href = movie.url || "#";
+ link.hidden = !movie.url;
+ document.getElementById("movieModal").style.display = "block";
+ document.body.style.overflow = "hidden";
+ document.getElementById("closeModal").focus();
+}
+
+function closeModal(){
+ document.getElementById("movieModal").style.display = "none";
+ document.body.style.overflow = "";
+}
+
+document.getElementById("search").addEventListener("input", event => {
+ searchText = event.target.value.trim().toLocaleLowerCase("uz");
+ renderMovies();
+});
+
+document.getElementById("categories").addEventListener("click", event => {
+ const button = event.target.closest("button[data-genre]");
+ if(!button) return;
+ activeGenre = button.dataset.genre;
+ document.querySelectorAll(".categories button").forEach(item =>
+  item.classList.toggle("active", item === button)
+ );
+ renderMovies();
+});
+
+document.getElementById("closeModal").addEventListener("click", closeModal);
+document.getElementById("movieModal").addEventListener("click", event => {
+ if(event.target.id === "movieModal") closeModal();
+});
+document.addEventListener("keydown", event => {
+ if(event.key === "Escape") closeModal();
+});
+
+
+/* KinoHub: Telegram Mini App + PWA home-screen support */
+(function () {
+  const area = document.getElementById("installArea");
+  const button = document.getElementById("installAppBtn");
+  const hint = document.getElementById("installHint");
+  const tg = window.Telegram && window.Telegram.WebApp ? window.Telegram.WebApp : null;
+
+  if (tg) {
+    try { tg.ready(); tg.expand(); } catch (e) {}
+    // Telegram may expose native home-screen support in supported app versions.
+    if (typeof tg.addToHomeScreen === "function") {
+      area.style.display = "block";
+      button.addEventListener("click", function () {
+        try {
+          tg.addToHomeScreen();
+          hint.textContent = "Telegram so‘rovni qabul qildi. Agar taklif chiqsa, tasdiqlang.";
+        } catch (e) {
+          hint.textContent = "Bu Telegram versiyasida bosh ekranga qo‘shish qo‘llab-quvvatlanmasligi mumkin.";
+        }
+      });
+    } else if (typeof tg.checkHomeScreenStatus === "function") {
+      area.style.display = "block";
+      button.addEventListener("click", function () {
+        try {
+          tg.checkHomeScreenStatus(function (status) {
+            if (status === "unsupported") {
+              hint.textContent = "Bu qurilma yoki Telegram versiyasida funksiya mavjud emas.";
+            } else if (status === "already_added") {
+              hint.textContent = "KinoHub allaqachon bosh ekranga qo‘shilgan.";
+            } else {
+              hint.textContent = "Telegram menyusidagi mavjud bosh ekranga qo‘shish bandini tekshiring.";
+            }
+          });
+        } catch (e) {
+          hint.textContent = "Telegram menyusidan bosh ekranga qo‘shish bandini tekshiring.";
+        }
+      });
+    }
+  }
+
+  // Browser PWA install prompt (available only in supported browsers, not every Telegram WebView).
+  let deferredPrompt = null;
+  window.addEventListener("beforeinstallprompt", function (event) {
+    event.preventDefault();
+    deferredPrompt = event;
+    area.style.display = "block";
+    if (!tg || typeof tg.addToHomeScreen !== "function") {
+      button.onclick = async function () {
+        if (!deferredPrompt) return;
+        deferredPrompt.prompt();
+        await deferredPrompt.userChoice;
+        deferredPrompt = null;
+      };
+    }
+  });
+
+  if ("serviceWorker" in navigator && location.protocol === "https:") {
+    window.addEventListener("load", function () {
+      navigator.serviceWorker.register("./sw.js", { scope: "./" }).catch(function () {});
+    });
+  }
+})();
+
+renderMovies();
+</script>
+</body>
+</html>
